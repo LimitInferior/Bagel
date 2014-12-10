@@ -4,13 +4,17 @@ local tileSize = 16
 local atlases
 local atlas
 local tiles
+local player
 
 local function toScreen(x, y)
     return (x - 1) * tileSize, (y - 1) * tileSize
 end
 
-local function drawTile(name, x, y)
-    graphics.draw(atlas, tiles[name], toScreen(x, y))
+local function drawTile(name, x, y, flip)
+    local dx = flip and 1 or 0
+    local screenX, screenY = toScreen(x + dx, y)
+    local scaleX = flip and -1 or 1
+    graphics.draw(atlas, tiles[name], screenX, screenY, 0, scaleX, 1)
 end
 
 local function makeTileSet(tileNames, imageSize)
@@ -40,6 +44,7 @@ function love.load()
         {"player"},
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
+    player = {name = "player", x = 2, y = 2}
 end
 
 function love.draw()
@@ -52,7 +57,7 @@ function love.draw()
             drawTile(tileName, x, y)
         end
     end
-    drawTile("player", 4, 5)
+    drawTile(player.name, player.x, player.y, player.flip)
     graphics.pop()
     graphics.print(love.timer.getFPS(), 0, 0)
 end
@@ -65,5 +70,24 @@ function love.update(dt)
         frameTimer = 0
         frameIndex = 3 - frameIndex -- 1 -> 2, 2 -> 1
         atlas = atlases[frameIndex]
+    end
+end
+
+local moveKeys =
+{
+    left = {x = -1, y = 0},
+    right = {x = 1, y = 0},
+    up = {x = 0, y = -1},
+    down = {x = 0, y = 1},
+}
+
+function love.keypressed(key)
+    local direction = moveKeys[key]
+    if direction then
+        player.x = player.x + direction.x
+        player.y = player.y + direction.y
+        if direction.x ~= 0 then
+            player.flip = direction.x > 0
+        end
     end
 end
