@@ -1,4 +1,5 @@
 local Core = require "Core"
+local Direction = require "Direction"
 
 local Unit = Core.class()
 
@@ -32,7 +33,7 @@ function Unit:act()
             return command(self)
         end
     else
-        self:move({x = 1, y = 0})
+        self:move(Direction.random())
         return self:getMoveSpeed()
     end
 end

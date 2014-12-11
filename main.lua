@@ -1,5 +1,7 @@
 local Level = require "Level"
 local Unit = require "Unit"
+local Direction = require "Direction"
+
 local keybindings = require "keybindings"
 
 local graphics = love.graphics
@@ -133,14 +135,6 @@ local function loadGame()
     end
 end
 
-local directions =
-{
-    left = {x = -1, y = 0},
-    right = {x = 1, y = 0},
-    up = {x = 0, y = -1},
-    down = {x = 0, y = 1},
-}
-
 local function moveUnit(unit, direction)
     local timeSpent = unit:move(direction)
     if direction.x ~= 0 then
@@ -151,10 +145,10 @@ end
 
 local commands =
 {
-    moveLeft = function(unit) return moveUnit(unit, directions.left) end,
-    moveRight = function(unit) return moveUnit(unit, directions.right) end,
-    moveUp = function(unit) return moveUnit(unit, directions.up) end,
-    moveDown = function(unit) return moveUnit(unit, directions.down) end,
+    moveLeft = function(unit) return moveUnit(unit, Direction.left) end,
+    moveRight = function(unit) return moveUnit(unit, Direction.right) end,
+    moveUp = function(unit) return moveUnit(unit, Direction.up) end,
+    moveDown = function(unit) return moveUnit(unit, Direction.down) end,
 }
 
 local keys = {}
