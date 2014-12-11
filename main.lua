@@ -8,6 +8,7 @@ local atlases
 local atlas
 local tiles
 local player
+local saveName = "save.txt"
 
 local function toScreen(x, y)
     return (x - 1) * tileSize, (y - 1) * tileSize
@@ -38,6 +39,81 @@ local function loadImage(name)
     return image
 end
 
+local function save(x, file)
+    local xType = type(x)
+    if xType == "number" or xType == "boolean" then
+        file:write(tostring(x))
+    elseif xType == "string" then
+        file:write(string.format("%q", x))
+    elseif xType == "table" then
+        file:write("{")
+        for k, v in pairs(x) do
+            file:write("[")
+            save(k, file)
+            file:write("]=")
+            save(v, file)
+            file:write(",")
+        end
+        file:write("}")
+    else
+        file:write("nil")
+    end
+end
+
+local function saveGame()
+    local level = player:getLevel()
+    local data = 
+    {
+        width = level.width,
+        height = level.height,
+        wall = level.wall,
+        floor = level.floor,
+        units = {},
+        features = {},
+    }
+    for x = 1, level.width do
+        for y = 1, level.height do
+            local cell = level:at(x, y)
+            local unit = cell.unit
+            if unit then
+                table.insert(data.units, {x = x, y = y, name = unit.name, image = unit.image})
+            end
+            local feature = cell.feature
+            if feature then
+                table.insert(data.features, {x = x, y = y, feature = feature})
+            end
+        end
+    end
+    local saveFile = love.filesystem.newFile(saveName, "w")
+    saveFile:write("return ")
+    save(data, saveFile)
+end
+
+local function loadGame()
+    if love.filesystem.exists(saveName) then
+        local data = love.filesystem.newFile(saveName, "r"):read()
+        print(data)
+        local data = load(data)()
+        love.filesystem.remove(saveName)
+        local level = Level.new(data.width, data.height, data.wall, data.floor)
+        for i = 1, #data.features do
+            local featureData = data.features[i]
+            level:at(featureData.x, featureData.y).feature = featureData.feature
+        end
+        for i = 1, #data.units do
+            local unitData = data.units[i]
+            local unit = Unit.new(level:at(unitData.x, unitData.y), unitData.name, unitData.image)
+            if i == 1 then -- TODO if unit.isPlayer
+                player = unit
+            end
+        end
+    else
+        local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
+        level:at(3, 4).feature = "closedDoor"
+        player = Unit.new(level:at(2, 2), "Tanusha", "player")
+    end
+end
+
 function love.load()
     atlases = {loadImage("atlas1.png"), loadImage("atlas2.png")}
     atlas = atlases[1]
@@ -48,9 +124,7 @@ function love.load()
         {"player"},
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
-    local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
-    level:at(3, 4).feature = "closedDoor"
-    player = Unit.new(level:at(2, 2), "Tanusha", "player")
+    loadGame()
 end
 
 function love.draw()
@@ -102,4 +176,8 @@ function love.keypressed(key)
             player.flip = direction.x > 0
         end
     end
+end
+
+function love.quit()
+    saveGame()
 end

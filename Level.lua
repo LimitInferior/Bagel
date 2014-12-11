@@ -5,6 +5,7 @@ local Level = Core.class()
 
 function Level:init(width, height, wall, floor)
     self.width, self.height = width, height
+    self.wall, self.floor = wall, floor
     local cells = {}
     for x = 1, width do
         cells[x] = {}
