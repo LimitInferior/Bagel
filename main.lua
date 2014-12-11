@@ -1,3 +1,5 @@
+local Level = require "Level"
+
 local graphics = love.graphics
 
 local tileSize = 16
@@ -5,6 +7,7 @@ local atlases
 local atlas
 local tiles
 local player
+local level
 
 local function toScreen(x, y)
     return (x - 1) * tileSize, (y - 1) * tileSize
@@ -45,16 +48,16 @@ function love.load()
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
     player = {name = "player", x = 2, y = 2}
+    level = Level.new(10, 10, {name = "wall"}, {name = "floor"})
 end
 
 function love.draw()
     graphics.push()
     graphics.scale(2)
-    local size = 15
-    for x = 1, size do
-        for y = 1, size do
-            local tileName = ((x == 1) or (x == size) or (y == 1) or (y == size)) and "wall" or "floor"
-            drawTile(tileName, x, y)
+    for x = 1, level.width do
+        for y = 1, level.height do
+            local cell = level:at(x, y)
+            drawTile(cell.terrain.name, x, y)
         end
     end
     drawTile(player.name, player.x, player.y, player.flip)
