@@ -2,11 +2,12 @@ local Core = require "Core"
 
 local Unit = Core.class()
 
-function Unit:init(cell, name, image)
+function Unit:init(cell, name, image, isPlayer)
     self.cell = cell
     cell.unit = self
     self.name = name
     self.image = image
+    self.isPlayer = isPlayer
 end
 
 function Unit:getLevel()

@@ -10,6 +10,7 @@ local atlas
 local tiles
 local player
 local saveName = "save.txt"
+local version = "0.0.2"
 
 local function toScreen(x, y)
     return (x - 1) * tileSize, (y - 1) * tileSize
@@ -65,6 +66,7 @@ local function saveGame()
     local level = player:getLevel()
     local data = 
     {
+        version = version,
         width = level.width,
         height = level.height,
         wall = level.wall,
@@ -77,7 +79,7 @@ local function saveGame()
             local cell = level:at(x, y)
             local unit = cell.unit
             if unit then
-                table.insert(data.units, {x = x, y = y, name = unit.name, image = unit.image})
+                table.insert(data.units, {x = x, y = y, name = unit.name, image = unit.image, isPlayer = unit.isPlayer})
             end
             local feature = cell.feature
             if feature then
@@ -90,10 +92,20 @@ local function saveGame()
     save(data, saveFile)
 end
 
+local function newGame()
+    local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
+    level:at(3, 4).feature = "closedDoor"
+    player = Unit.new(level:at(2, 2), "Tanusha", "player", true)
+end
+
 local function loadGame()
     if love.filesystem.exists(saveName) then
         local data = load(love.filesystem.newFile(saveName, "r"):read())()
         love.filesystem.remove(saveName)
+        if data.version ~= version then
+            newGame()
+            return
+        end
         local level = Level.new(data.width, data.height, data.wall, data.floor)
         for i = 1, #data.features do
             local featureData = data.features[i]
@@ -101,15 +113,13 @@ local function loadGame()
         end
         for i = 1, #data.units do
             local unitData = data.units[i]
-            local unit = Unit.new(level:at(unitData.x, unitData.y), unitData.name, unitData.image)
-            if i == 1 then -- TODO if unit.isPlayer
+            local unit = Unit.new(level:at(unitData.x, unitData.y), unitData.name, unitData.image, unitData.isPlayer)
+            if unit.isPlayer then -- TODO if unit.isPlayer
                 player = unit
             end
         end
     else
-        local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
-        level:at(3, 4).feature = "closedDoor"
-        player = Unit.new(level:at(2, 2), "Tanusha", "player")
+        newGame()
     end
 end
 
@@ -152,6 +162,7 @@ function love.load()
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
     loadGame()
+    love.window.setTitle("Bagel " .. version)
 end
 
 function love.draw()
