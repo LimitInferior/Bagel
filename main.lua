@@ -44,10 +44,12 @@ function love.load()
     local terrainNames =
     {
         {"floor", "wall"},
+        {"closedDoor", "openedDoor"}, 
         {"player"},
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
     local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
+    level:at(3, 4).feature = "closedDoor"
     player = Unit.new(level:at(2, 2), "Tanusha", "player")
 end
 
@@ -59,10 +61,16 @@ function love.draw()
         for y = 1, level.height do
             local cell = level:at(x, y)
             drawTile(cell.terrain.name, x, y)
+            local feature = cell.feature
+            if feature then
+                drawTile(feature, x, y)
+            end
+            local unit = cell.unit
+            if unit then
+                drawTile(unit.image, x, y, unit.flip)
+            end 
         end
     end
-    local x, y = player:getPosition()
-    drawTile(player.image, x, y, player.flip)
     graphics.pop()
     graphics.print(love.timer.getFPS(), 0, 0)
 end

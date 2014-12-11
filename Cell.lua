@@ -13,7 +13,7 @@ function Cell:getAdjacent(direction)
 end
 
 function Cell:canPlaceUnit()
-    return self.terrain.isWalkable and (self.unit == nil)
+    return self.terrain.isWalkable and (self.unit == nil) and (self.feature ~= "closedDoor")
 end
 
 return Cell

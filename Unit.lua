@@ -23,12 +23,17 @@ function Unit:move(direction)
 end
 
 function Unit:moveTo(newCell)
-    if newCell and newCell:canPlaceUnit() then
-        local oldCell = self.cell
-        oldCell.unit = nil
-        newCell.unit = self
-        self.cell = newCell
-        return true
+    if newCell then
+        if newCell:canPlaceUnit() then
+            local oldCell = self.cell
+            oldCell.unit = nil
+            newCell.unit = self
+            self.cell = newCell
+            return true
+        elseif newCell.feature == "closedDoor" then
+            newCell.feature = "openedDoor"
+            return true
+        end
     end
 end
 
