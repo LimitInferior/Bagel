@@ -1,4 +1,5 @@
 local Level = require "Level"
+local Unit = require "Unit"
 
 local graphics = love.graphics
 
@@ -7,7 +8,6 @@ local atlases
 local atlas
 local tiles
 local player
-local level
 
 local function toScreen(x, y)
     return (x - 1) * tileSize, (y - 1) * tileSize
@@ -47,20 +47,22 @@ function love.load()
         {"player"},
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
-    player = {name = "player", x = 2, y = 2}
-    level = Level.new(10, 10, {name = "wall"}, {name = "floor"})
+    local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
+    player = Unit.new(level:at(2, 2), "Tanusha", "player")
 end
 
 function love.draw()
     graphics.push()
     graphics.scale(2)
+    local level = player:getLevel()
     for x = 1, level.width do
         for y = 1, level.height do
             local cell = level:at(x, y)
             drawTile(cell.terrain.name, x, y)
         end
     end
-    drawTile(player.name, player.x, player.y, player.flip)
+    local x, y = player:getPosition()
+    drawTile(player.image, x, y, player.flip)
     graphics.pop()
     graphics.print(love.timer.getFPS(), 0, 0)
 end
@@ -87,8 +89,7 @@ local moveKeys =
 function love.keypressed(key)
     local direction = moveKeys[key]
     if direction then
-        player.x = player.x + direction.x
-        player.y = player.y + direction.y
+        player:move(direction)
         if direction.x ~= 0 then
             player.flip = direction.x > 0
         end
