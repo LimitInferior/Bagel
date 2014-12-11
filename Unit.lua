@@ -2,12 +2,13 @@ local Core = require "Core"
 
 local Unit = Core.class()
 
-function Unit:init(cell, name, image, isPlayer)
+function Unit:init(cell, name, image, isPlayer, time)
     self.cell = cell
     cell.unit = self
     self.name = name
     self.image = image
     self.isPlayer = isPlayer
+    self:getLevel():registerUnit(self, time)
 end
 
 function Unit:getLevel()
@@ -19,6 +20,23 @@ function Unit:getPosition()
     return cell.x, cell.y
 end
 
+function Unit:getMoveSpeed()
+    return 1
+end
+
+function Unit:act()
+    if self.isPlayer then
+        local command = self.command
+        if command then
+            self.command = nil
+            return command(self)
+        end
+    else
+        self:move({x = 1, y = 0})
+        return self:getMoveSpeed()
+    end
+end
+        
 function Unit:move(direction)
     return self:moveTo(self.cell:getAdjacent(direction))
 end
@@ -30,10 +48,10 @@ function Unit:moveTo(newCell)
             oldCell.unit = nil
             newCell.unit = self
             self.cell = newCell
-            return true
+            return self:getMoveSpeed()
         elseif newCell.feature == "ClosedDoor" then
             newCell.feature = "OpenedDoor"
-            return true
+            return self:getMoveSpeed()
         end
     end
 end

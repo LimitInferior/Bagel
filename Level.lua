@@ -15,6 +15,9 @@ function Level:init(width, height, wall, floor)
         end
     end
     self.cells = cells
+    self.units = {}
+    self.activeUnitIndex = 1
+    self.now = 0
 end
 
 function Level:at(x, y)
@@ -24,6 +27,47 @@ end
 
 function Level:isOnBorder(x, y)
     return (1 == x) or (x == self.width) or (1 == y) or (y == self.height)
+end
+
+function Level:update()
+    local unit = self:getActiveUnit()
+    local timeSpent = unit:act()
+    if timeSpent then
+        self:registerUnit(unit, timeSpent)
+        self:nextUnit()
+        return true
+    end
+end
+
+function Level:registerUnit(unit, deltaTime)
+    local time = self.now + (deltaTime or 0)
+    local units = self.units[time]
+    if not units then
+        units = {}
+        self.units[time] = units
+    end
+    units[#units + 1] = unit
+end
+
+function Level:getActiveUnit()
+    return self:getReadyUnits()[self.activeUnitIndex]
+end
+
+function Level:getReadyUnits()
+    return self.units[self.now]
+end
+
+function Level:nextUnit()
+    local readyUnits = self:getReadyUnits()
+    if self.activeUnitIndex < #readyUnits then
+        self.activeUnitIndex = self.activeUnitIndex + 1
+    else
+        self.units[self.now] = nil
+        self.activeUnitIndex = 1
+        repeat
+            self.now = self.now + 1
+        until self:getReadyUnits()
+    end
 end
 
 return Level

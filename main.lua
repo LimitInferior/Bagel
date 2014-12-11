@@ -71,21 +71,27 @@ local function saveGame()
         height = level.height,
         wall = level.wall,
         floor = level.floor,
+        now = level.now,
         units = {},
         features = {},
     }
     for x = 1, level.width do
         for y = 1, level.height do
             local cell = level:at(x, y)
-            local unit = cell.unit
-            if unit then
-                table.insert(data.units, {x = x, y = y, name = unit.name, image = unit.image, isPlayer = unit.isPlayer})
-            end
             local feature = cell.feature
             if feature then
                 table.insert(data.features, {x = x, y = y, feature = feature})
             end
         end
+    end
+    for time, units in pairs(level.units) do
+        local unitsData = {}
+        for i = 1, #units do
+            local unit = units[i]
+            local x, y = unit:getPosition()
+            table.insert(unitsData, {x = x, y = y, name = unit.name, image = unit.image, isPlayer = unit.isPlayer})
+        end
+        data.units[time] = unitsData
     end
     local saveFile = love.filesystem.newFile(saveName, "w")
     saveFile:write("return ")
@@ -112,13 +118,16 @@ local function loadGame()
             local featureData = data.features[i]
             level:at(featureData.x, featureData.y).feature = featureData.feature
         end
-        for i = 1, #data.units do
-            local unitData = data.units[i]
-            local unit = Unit.new(level:at(unitData.x, unitData.y), unitData.name, unitData.image, unitData.isPlayer)
-            if unit.isPlayer then -- TODO if unit.isPlayer
-                player = unit
+        for time, units in pairs(data.units) do
+            for i = 1, #units do
+                local unitData = units[i]
+                local unit = Unit.new(level:at(unitData.x, unitData.y), unitData.name, unitData.image, unitData.isPlayer, time)
+                if unit.isPlayer then -- TODO if unit.isPlayer
+                    player = unit
+                end
             end
         end
+        level.now = data.now
     else
         newGame()
     end
@@ -133,18 +142,19 @@ local directions =
 }
 
 local function moveUnit(unit, direction)
-    unit:move(direction)
+    local timeSpent = unit:move(direction)
     if direction.x ~= 0 then
         unit.flip = direction.x > 0
     end
+    return timeSpent
 end
 
 local commands =
 {
-    moveLeft = function(unit) moveUnit(unit, directions.left) end,
-    moveRight = function(unit) moveUnit(unit, directions.right) end,
-    moveUp = function(unit) moveUnit(unit, directions.up) end,
-    moveDown = function(unit) moveUnit(unit, directions.down) end,
+    moveLeft = function(unit) return moveUnit(unit, directions.left) end,
+    moveRight = function(unit) return moveUnit(unit, directions.right) end,
+    moveUp = function(unit) return moveUnit(unit, directions.up) end,
+    moveDown = function(unit) return moveUnit(unit, directions.down) end,
 }
 
 local keys = {}
@@ -202,7 +212,9 @@ end
 function love.keypressed(key)
     local command = keys[key]
     if command then
-        command(player)
+        player.command = command
+        while player:getLevel():update() do
+        end
     end
 end
 
