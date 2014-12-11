@@ -31,8 +31,8 @@ function Unit:moveTo(newCell)
             newCell.unit = self
             self.cell = newCell
             return true
-        elseif newCell.feature == "closedDoor" then
-            newCell.feature = "openedDoor"
+        elseif newCell.feature == "ClosedDoor" then
+            newCell.feature = "OpenedDoor"
             return true
         end
     end

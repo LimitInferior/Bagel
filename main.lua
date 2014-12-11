@@ -93,9 +93,10 @@ local function saveGame()
 end
 
 local function newGame()
-    local level = Level.new(10, 10, {name = "wall", isWalkable = false}, {name = "floor", isWalkable = true})
-    level:at(3, 4).feature = "closedDoor"
-    player = Unit.new(level:at(2, 2), "Tanusha", "player", true)
+    local level = Level.new(10, 10, {name = "Wall", isWalkable = false}, {name = "Floor", isWalkable = true})
+    level:at(3, 4).feature = "ClosedDoor"
+    player = Unit.new(level:at(2, 2), "Tanusha", "Player", true)
+    Unit.new(level:at(3, 6), "Dwarf", "Dwarf")
 end
 
 local function loadGame()
@@ -156,9 +157,9 @@ function love.load()
     atlas = atlases[1]
     local terrainNames =
     {
-        {"floor", "wall"},
-        {"closedDoor", "openedDoor"}, 
-        {"player"},
+        {"Floor", "Wall"},
+        {"ClosedDoor", "OpenedDoor"}, 
+        {"Player", "Dwarf"},
     }
     tiles = makeTileSet(terrainNames, atlas:getWidth())
     loadGame()
