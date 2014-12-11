@@ -1,5 +1,6 @@
 local Level = require "Level"
 local Unit = require "Unit"
+local keybindings = require "keybindings"
 
 local graphics = love.graphics
 
@@ -91,9 +92,7 @@ end
 
 local function loadGame()
     if love.filesystem.exists(saveName) then
-        local data = love.filesystem.newFile(saveName, "r"):read()
-        print(data)
-        local data = load(data)()
+        local data = load(love.filesystem.newFile(saveName, "r"):read())()
         love.filesystem.remove(saveName)
         local level = Level.new(data.width, data.height, data.wall, data.floor)
         for i = 1, #data.features do
@@ -114,7 +113,35 @@ local function loadGame()
     end
 end
 
+local directions =
+{
+    left = {x = -1, y = 0},
+    right = {x = 1, y = 0},
+    up = {x = 0, y = -1},
+    down = {x = 0, y = 1},
+}
+
+local function moveUnit(unit, direction)
+    unit:move(direction)
+    if direction.x ~= 0 then
+        unit.flip = direction.x > 0
+    end
+end
+
+local commands =
+{
+    moveLeft = function(unit) moveUnit(unit, directions.left) end,
+    moveRight = function(unit) moveUnit(unit, directions.right) end,
+    moveUp = function(unit) moveUnit(unit, directions.up) end,
+    moveDown = function(unit) moveUnit(unit, directions.down) end,
+}
+
+local keys = {}
+
 function love.load()
+    for command, key in pairs(keybindings) do
+        keys[key] = commands[command]
+    end
     atlases = {loadImage("atlas1.png"), loadImage("atlas2.png")}
     atlas = atlases[1]
     local terrainNames =
@@ -160,21 +187,10 @@ function love.update(dt)
     end
 end
 
-local moveKeys =
-{
-    left = {x = -1, y = 0},
-    right = {x = 1, y = 0},
-    up = {x = 0, y = -1},
-    down = {x = 0, y = 1},
-}
-
 function love.keypressed(key)
-    local direction = moveKeys[key]
-    if direction then
-        player:move(direction)
-        if direction.x ~= 0 then
-            player.flip = direction.x > 0
-        end
+    local command = keys[key]
+    if command then
+        command(player)
     end
 end
 
